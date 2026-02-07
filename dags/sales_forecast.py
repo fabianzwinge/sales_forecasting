@@ -163,7 +163,17 @@ def sales_forecast():
             )
             daily_sales['customer_traffic'] = daily_sales['customer_traffic'].fillna(daily_sales['customer_traffic'].median()).astype(int)
             
-            return daily_sales
+            # aggregate to store level for modeling
+            store_daily_sales = (
+                daily_sales.groupby(['date', 'store_id'])
+                .agg({'has_discount': 'mean', 'total_revenue': 'sum', 'total_quantity': 'sum', 'customer_traffic': 'first', 'is_holiday': 'first'})
+                .reset_index()
+            )
+            
+            print("Data cleaning complete. Sample of cleaned data:")
+            print(store_daily_sales.head())
+
+            return store_daily_sales
 
 
     @task()
