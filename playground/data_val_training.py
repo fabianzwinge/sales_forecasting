@@ -1,38 +1,17 @@
-from airflow.sdk import task, dag
-from datetime import datetime, timedelta
-
 import pandas as pd
 import os
 import sys
 
-sys.path.append("/usr/local/airflow/include")
+sys.path.append("C:\\Users\\Fabian\\Desktop\\sales_forecasting\\include")
 
 from utils.sales_data_generator import SalesDataGenerator
 
-default_args = {
-    "owner": "airflow",
-    "depends_on_past": False,
-    "start_date": datetime(2026, 2, 7),
-    "retries": 1,
-    "retry_delay": timedelta(minutes=5),
-}
-
-@dag(
-    dag_id="sales_forecast",
-    default_args=default_args,
-    description="Train sales forecasting models",
-    schedule="@weekly",
-    start_date=datetime(2026, 2, 7),
-    catchup=False,
-    tags=["training", "sales"],
-)
 
 def sales_forecast():
-    @task()
     def extract_data():
         data_output_dir = "/tmp/sales_data" #stored in docker container (airflow scheduler), not persisted
         generator = SalesDataGenerator(
-            start_date="2025-01-01", end_date="2026-01-01"
+            start_date="2025-12-01", end_date="2026-01-01"
         )
         print("Generating realistic sales data...")
         file_paths = generator.generate_sales_data(output_dir=data_output_dir)
@@ -40,17 +19,12 @@ def sales_forecast():
         print(f"Generated {total_files} files:")
         for data_type, paths in file_paths.items():
             print(f"  - {data_type}: {len(paths)} files")
-
         return {
             "data_output_dir": data_output_dir,
             "file_paths": file_paths,
             "total_files": total_files,
         }
 
-    @task()
-    ## Note: In a real implementation, we would likely want to break this validation into multiple tasks for better modularity and error handling. 
-    ## For demonstration, we are keeping it in one task.
-    ## There are also many more validation checks we could implement (e.g. checking for duplicates, etc.)
     def validate_data(extracted_data):
         file_paths = extracted_data['file_paths']
         val_issues = []
@@ -59,6 +33,10 @@ def sales_forecast():
         ## Validate sales files
         for sales_file in file_paths['sales'][:5]: #just validate first 5 sales files for demonstration
             df = pd.read_parquet(sales_file)
+            
+            #print(f"Preview of {sales_file}:")
+            #print(df.head())
+            #print("---------------")
 
             required_columns = {'date', 'store_id', 'product_id', 'quantity_sold', 'revenue'}
 
@@ -99,12 +77,9 @@ def sales_forecast():
             print(validation_report)
             for issue in val_issues:
                 print(issue)
-        else:
-            print(validation_report)
-        
+    
         return validation_report
-
-    @task()
+    
     def clean_data(validated_data):
         file_paths = validated_data['file_paths']
 
@@ -145,7 +120,7 @@ def sales_forecast():
         #clean customer traffic data and merge with sales
         if file_paths['customer_traffic']:
             traffic_dfs = []
-            for traffic_file in file_paths['customer_traffic'][:100]:
+            for traffic_file in file_paths['customer_traffic'][:100]: #just read first 100 traffic files for demonstration
                 df = pd.read_parquet(traffic_file)
                 traffic_dfs.append(df)
             traffic_data = pd.concat(traffic_dfs, ignore_index=True)
@@ -162,22 +137,19 @@ def sales_forecast():
                 how='left'
             )
             daily_sales['customer_traffic'] = daily_sales['customer_traffic'].fillna(daily_sales['customer_traffic'].median()).astype(int)
-            
             return daily_sales
-
-
-    @task()
-    def train_models(cleaned_data):
+    
+    def train_models(clean_data):
         print("Training models with cleaned data...")
-        print(f"Cleaned data shape: {cleaned_data.shape}")
-        print(f"Cleaned data columns: {cleaned_data.columns.tolist()}")
-        print(cleaned_data.head())
-
+        print(f"Cleaned data shape: {clean_data.shape}")
+        print(f"Cleaned data columns: {clean_data.columns.tolist()}")
+        print(clean_data.head())
+        
     extract_data_task = extract_data()
     validate_data_task = validate_data(extracted_data=extract_data_task)
     clean_data_task = clean_data(validated_data=validate_data_task)
-    train_models_task = train_models(cleaned_data=clean_data_task)
-
-sales_forecast_dag = sales_forecast()
+    train_models_task = train_models(clean_data=clean_data_task)
+    
+sales_forecast()
 
     
