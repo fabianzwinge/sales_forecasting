@@ -4,10 +4,12 @@ from datetime import datetime, timedelta
 import pandas as pd
 import os
 import sys
+ import mlflow
 
 sys.path.append("/usr/local/airflow/include")
 
 from utils.sales_data_generator import SalesDataGenerator
+from ml_models.train_models import ModelTrainer
 
 default_args = {
     "owner": "airflow",
@@ -178,11 +180,52 @@ def sales_forecast():
 
     @task()
     def train_models(cleaned_data):
-        print("Training models with cleaned data...")
-        print(f"Cleaned data shape: {cleaned_data.shape}")
-        print(f"Cleaned data columns: {cleaned_data.columns.tolist()}")
-        print(cleaned_data.head())
+       trainer = ModelTrainer()
+       train_df, val_df, test_df = trainer.prepare_data(
+            cleaned_data,
+            target_col='total_revenue',
+            date_col='date',
+            group_cols=['store_id'],
+            categorical_cols=['store_id']
+        )
 
+        print(f"Train shape: {train_df.shape}, Val shape: {val_df.shape}, Test shape: {test_df.shape}")
+
+        results = trainer.train_all_models(train_df, val_df, test_df, target_col='total_revenue', use_optuna=True)
+        for model_name, model_results in results.items():
+            if "metrics" in model_results:
+                print(f"\n{model_name} metrics:")
+                for metric, value in model_results["metrics"].items():
+                    print(f"  {metric}: {value:.4f}")
+
+        serializable_results = {}
+
+        for model_name, model_results in results.items():
+            serializable_results[model_name] = {
+                "metrics": model_results.get("metrics", {})
+            }
+
+        print("\nVisualization charts have been generated and saved to MLflow/MinIO")
+        print("Charts include:")
+        print("  - Model metrics comparison")
+        print("  - Predictions vs actual values")
+        print("  - Residuals analysis")
+        print("  - Error distribution")
+        print("  - Feature importance comparison")
+
+        current_run_id = (
+            mlflow.active_run().info.run_id if mlflow.active_run() else None
+        )
+        
+        return {
+            "training_results": serializable_results,
+            "mlflow_run_id": current_run_id,
+        }
+    
+    
+    
+    
+    
     extract_data_task = extract_data()
     validate_data_task = validate_data(extracted_data=extract_data_task)
     clean_data_task = clean_data(validated_data=validate_data_task)
