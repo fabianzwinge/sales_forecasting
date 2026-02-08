@@ -1,6 +1,6 @@
 # MLflow Configuration
 mlflow:
-  tracking_uri: "${MLFLOW_TRACKING_URI:-http://mlflow:5001}"
+  tracking_uri: "${MLFLOW_TRACKING_URI:-http://mlflow:5000}"
   experiment_name: "sales_forecasting"
   registry_name: "sales_forecast_models"
   
