@@ -38,7 +38,7 @@ class MLflowManager:
             logger.warning(f"Failed to set experiment {self.experiment_name}: {e}")
             # Try with localhost if initial connection failed
             if 'mlflow' in self.tracking_uri:
-                self.tracking_uri = "http://localhost:5001"
+                self.tracking_uri = "http://localhost:5000"
                 mlflow.set_tracking_uri(self.tracking_uri)
                 os.environ['MLFLOW_TRACKING_URI'] = self.tracking_uri
                 logger.info(f"Retrying with localhost: {self.tracking_uri}")

@@ -23,17 +23,17 @@ def get_mlflow_endpoint() -> Optional[str]:
     if in_container:
         # In container, prioritize service names
         endpoints = [
-            'http://mlflow:5001',
-            'http://host.docker.internal:5001',
-            'http://172.17.0.1:5001',  # Default Docker bridge
-            'http://localhost:5001'
+            'http://mlflow:5000',
+            'http://host.docker.internal:5000',
+            'http://172.17.0.1:5000',  # Default Docker bridge
+            'http://localhost:5000'
         ]
     else:
         # Outside container, prioritize localhost
         endpoints = [
-            'http://localhost:5001',
-            'http://127.0.0.1:5001',
-            'http://host.docker.internal:5001'
+            'http://localhost:5000',
+            'http://127.0.0.1:5000',
+            'http://host.docker.internal:5000'
         ]
 
     import urllib.request
@@ -50,7 +50,7 @@ def get_mlflow_endpoint() -> Optional[str]:
             continue
 
     # If nothing works, return the most likely default based on environment
-    default = 'http://mlflow:5001' if in_container else 'http://localhost:5001'
+    default = 'http://mlflow:5000' if in_container else 'http://localhost:5000'
     logger.warning(f"Could not connect to MLflow, using default: {default}")
     return default
 
