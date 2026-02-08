@@ -13,7 +13,6 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 import xgboost as xgb
 import lightgbm as lgb
-from prophet import Prophet
 import optuna
 import mlflow
 
@@ -22,8 +21,6 @@ from utils.mlflow_s3_utils import MLflowS3Manager
 from utils.s3_verification import verify_s3_artifacts, log_s3_verification_results
 from feature_engineering.feature_pipeline import FeatureEngineer
 from data_validation.validators import DataValidator
-from ml_models.advanced_ensemble import AdvancedEnsemble
-from ml_models.diagnostics import diagnose_model_performance
 from ml_models.ensemble_model import EnsembleModel
 
 logger = logging.getLogger(__name__)
