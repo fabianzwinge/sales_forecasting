@@ -244,12 +244,36 @@ def sales_forecast():
             "best_model": best_model,
             "best_run": best_model_run["run_id"],
         }
-    
+
+    @task()
+    def register_best_model(evaluation_results):
+        run_id = evaluation_results['best_run']
+        mlflow_manager = MLflowManager()
+        model_versions = {}
+        for model_name in ["xgboost", "lightgbm"]:
+            model_version = mlflow_manager.register_model(run_id, model_name, model_name)
+            model_versions[model_name] = model_version
+            print(f"Registered {model_name} as version {model_version.version} in MLflow Model Registry")
+        
+        return model_versions
+
+    @task()
+    def deploy_model(model_versions):
+        mlflow_manager = MLflowManager()
+        for model_name, model_version in model_versions.items():
+           mlflow_manager.transition_model_version_stage(model_name, model_version.version, stage="Production")
+           print(f"Deployed {model_name} version {model_version.version} to Production stage")
+
+        return "Models deployed to Production stage in MLflow Model Registry"
+
+       
     extract_data_task = extract_data()
     validate_data_task = validate_data(extracted_data=extract_data_task)
     clean_data_task = clean_data(validated_data=validate_data_task)
     train_models_task = train_models(cleaned_data=clean_data_task)
     evaluate_models_task = evaluate_models(training_results=train_models_task)
+    register_best_model_task = register_best_model(evaluation_results=evaluate_models_task)
+    deploy_model_task = deploy_model(model_versions=register_best_model_task)
 
 sales_forecast_dag = sales_forecast()
 
