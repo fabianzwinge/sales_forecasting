@@ -4,12 +4,13 @@ from datetime import datetime, timedelta
 import pandas as pd
 import os
 import sys
- import mlflow
+import mlflow
 
 sys.path.append("/usr/local/airflow/include")
 
 from utils.sales_data_generator import SalesDataGenerator
 from ml_models.train_models import ModelTrainer
+from utils.mlflow_utils import MLflowManager
 
 default_args = {
     "owner": "airflow",
@@ -180,8 +181,8 @@ def sales_forecast():
 
     @task()
     def train_models(cleaned_data):
-       trainer = ModelTrainer()
-       train_df, val_df, test_df = trainer.prepare_data(
+        trainer = ModelTrainer()
+        train_df, val_df, test_df = trainer.prepare_data(
             cleaned_data,
             target_col='total_revenue',
             date_col='date',
@@ -216,20 +217,39 @@ def sales_forecast():
         current_run_id = (
             mlflow.active_run().info.run_id if mlflow.active_run() else None
         )
-        
+
         return {
             "training_results": serializable_results,
             "mlflow_run_id": current_run_id,
         }
     
-    
-    
-    
+    @task()
+    def evaluate_models(training_results):
+        results = training_results['training_results']
+        mlflow_manager = MLflowManager()
+        best_model = None
+        best_rmse= float('inf')
+
+        for model_name, model_results in results.items():
+            if "metrics" in model_results and "rmse" in model_results["metrics"]:
+                rmse = model_results["metrics"]["rmse"]
+                print(f"{model_name} RMSE: {rmse:.4f}")
+                if rmse < best_rmse:
+                    best_rmse = rmse
+                    best_model = model_name
+        print(f"Best model based on RMSE: {best_model} with RMSE: {best_rmse:.4f}")
+        best_model_run = mlflow_manager.get_best_model(metric="rmse", ascending=True)
+        
+        return {
+            "best_model": best_model,
+            "best_run": best_model_run["run_id"],
+        }
     
     extract_data_task = extract_data()
     validate_data_task = validate_data(extracted_data=extract_data_task)
     clean_data_task = clean_data(validated_data=validate_data_task)
     train_models_task = train_models(cleaned_data=clean_data_task)
+    evaluate_models_task = evaluate_models(training_results=train_models_task)
 
 sales_forecast_dag = sales_forecast()
 
