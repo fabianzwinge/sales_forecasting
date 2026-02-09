@@ -107,7 +107,7 @@ class FeatureEngineer:
         logger.info("Created cyclical features")
         return df
     
-    def create_all_features(self, df: pd.DataFrame, target_col: str = 'sales',
+    def create_all_features(self, df: pd.DataFrame, target_col: str = 'total_revenue',
                            date_col: str = 'date', 
                            group_cols: Optional[List[str]] = None,
                            categorical_cols: Optional[List[str]] = None) -> pd.DataFrame:
@@ -240,9 +240,9 @@ class FeatureEngineer:
         df['is_quarter_end'] = (df['quarter_progress'] == 3).astype(int)
         
         # Add carefully selected features that improve time series prediction
-        if 'has_promotion' in df.columns and 'is_weekend' in df.columns:
+        if 'has_discount' in df.columns and 'is_weekend' in df.columns:
             # Simple interaction between promotion and weekend
-            df['promotion_weekend'] = df['has_promotion'] * df['is_weekend']
+            df['promotion_weekend'] = df['has_discount'] * df['is_weekend']
         
         # Ratio features that capture relative performance
         for window in [7, 30]:
