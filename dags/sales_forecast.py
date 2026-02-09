@@ -128,7 +128,7 @@ def sales_forecast():
             .sort_values('date')
         )
 
-        daily_sales = daily_sales.rename(columns={'revenue': 'total_revenue', 'quantity_sold': 'total_quantity', 'cost': 'total_cost', 'profit': 'total_profit'})
+        daily_sales = daily_sales.rename(columns={'revenue': 'total_revenue'})
         daily_sales['date'] = pd.to_datetime(daily_sales['date'])
 
         #clean promotions data and merge with sales
@@ -173,7 +173,7 @@ def sales_forecast():
             # aggregate to store level for modeling
             store_daily_sales = (
                 daily_sales.groupby(['date', 'store_id'])
-                .agg({'has_discount': 'mean', 'total_revenue': 'sum', 'total_quantity': 'sum', 'total_profit': 'sum', 'customer_traffic': 'first', 'is_holiday': 'first'})
+                .agg({'has_discount': 'mean', 'total_revenue': 'sum', 'quantity_sold': 'sum', 'profit': 'sum', 'customer_traffic': 'first', 'is_holiday': 'first'})
                 .reset_index()
             )
             
