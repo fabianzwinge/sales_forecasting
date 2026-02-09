@@ -57,16 +57,28 @@ All artifacts are synchronized to MinIO S3 storage.
 
 The pipeline generates comprehensive HTML reports with embedded visualizations:
 
-![Metrics Comparison](img/metrics_comparison.png)
+![Metrics Comparison](res/metrics_comparison.png)
 *Performance metrics (RMSE, MAE, R²) across XGBoost, LightGBM, and Ensemble models*
 
-![Predictions vs Actuals](img/predictions_comparison.png)
+![Predictions vs Actuals](res/predictions_comparison.png)
 *Time series comparison showing model predictions against actual sales data*
 
-![Feature Importance](img/feature_importance.png)
+![Feature Importance](res/feature_importance.png)
 *Top 20 features driving model predictions*
 
 View full report: [`res/model_comparison_report.html`](res/model_comparison_report.html)
+
+## Sales Forecasting UI
+
+The Streamlit UI provides an interactive interface for generating sales forecasts using the trained models.
+
+![Upload Data](res/ui_1.png)
+*Upload historical sales data (CSV)*
+
+![Forecast Results](res/ui_2.png)
+*Interactive visualization of predictions with confidence intervals*
+
+Access the UI at http://localhost:8501 after starting the pipeline.
 
 ## Configuration
 
