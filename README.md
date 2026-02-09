@@ -1,45 +1,94 @@
-Overview
-========
+# Sales Forecasting ML Pipeline
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+This project implements an end-to-end machine learning pipeline for sales prediction. It combines ETL workflows orchestrated by Apache Airflow with advanced ML models (XGBoost and LightGBM) to deliver accurate revenue forecasts. The pipeline includes automated training, evaluation, visualization of results, and forecast predictions. Model artifacts and experiment results are tracked in MLflow and synchronized to MinIO S3 storage for persistence.
 
-Project Contents
-================
+## Prerequisites
 
-Your Astro project contains the following files and folders:
+- **Docker Desktop** 
+- **Astronomer CLI**: Install from [https://docs.astronomer.io/astro/cli/install-cli](https://docs.astronomer.io/astro/cli/install-cli)
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+## Quick Start
 
-Deploy Your Project Locally
-===========================
+1. **Start the ML pipeline:**
+   ```bash
+   astro dev start
+   ```
 
-Start Airflow on your local machine by running 'astro dev start'.
+2. **Access the services:**
+   - **Airflow UI**: http://localhost:8080 (username: `admin`, password: `admin`)
+   - **MLflow UI**: http://localhost:5000
+   - **MinIO Console**: http://localhost:9001 (username: `minio`, password: `minio123`)
+   - **StreamLit UI**: http://localhost:8501
 
-This command will spin up five Docker containers on your machine, each for a different Airflow component:
+3. **Trigger the DAG:**
+   - Navigate to Airflow UI
+   - Enable the `sales_forecast` DAG
+   - Click "Trigger DAG" to start the pipeline
 
-- Postgres: Airflow's Metadata Database
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- DAG Processor: The Airflow component responsible for parsing DAGs
-- API Server: The Airflow component responsible for serving the Airflow UI and API
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+4. **Monitor the pipeline:**
+   - Watch task execution in Airflow
+   - View experiments and metrics in MLflow
+   - Check artifact storage in MinIO console
 
-When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
+## ETL Workflow (Airflow)
 
-Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+![Airflow DAG](res/airflow_dag.png)
 
-Deploy Your Project to Astronomer
-=================================
+The pipeline consists of the following tasks:
+1. **Extract Data**: Load sales, customer traffic, inventory, promotions, and events
+2. **Validate Data**: Schema validation and quality checks
+3. **Clean Data**: Aggregation to store-level, feature creation
+4. **Train Models**: Parallel training of XGBoost and LightGBM with Optuna optimization
+5. **Evaluate Models**: Compare performance metrics (RMSE, MAE, R²)
+6. **Register Models**: Version management in MLflow Model Registry
+7. **Deploy Models**: Transition best models to Production stage
+8. **Create Report**: Generate summary with training and evaluation results
+9. **Cleanup**: Remove temporary data files to free up disk space
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+## Pipeline in Action
 
-Contact
-=======
+Once the pipeline runs, all experiment data, model artifacts, and visualizations are automatically tracked and stored in MLFlow.
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+![MLflow Runs](res/mlflow_run.png)
+
+All artifacts are synchronized to MinIO S3 storage.
+
+![MinIO S3 Storage](res/minio_run.png)
+
+The pipeline generates comprehensive HTML reports with embedded visualizations:
+
+![Metrics Comparison](img/metrics_comparison.png)
+*Performance metrics (RMSE, MAE, R²) across XGBoost, LightGBM, and Ensemble models*
+
+![Predictions vs Actuals](img/predictions_comparison.png)
+*Time series comparison showing model predictions against actual sales data*
+
+![Feature Importance](img/feature_importance.png)
+*Top 20 features driving model predictions*
+
+View full report: [`res/model_comparison_report.html`](res/model_comparison_report.html)
+
+## Configuration
+
+### MLflow Configuration
+Edit `include/config/model_config.yml` to customize:
+- Model hyperparameters
+- Training/validation split ratios
+- Optuna trial counts
+- Feature engineering parameters
+
+### Storage Configuration
+MinIO and MLflow are configured in `docker-compose.override.yml`:
+- **MLflow Tracking**: PostgreSQL backend at `mlflow-postgres:5433`
+- **Artifact Storage**: MinIO S3 at `minio:9000` (bucket: `mlflow`)
+
+## Stopping the Pipeline
+
+```bash
+astro dev stop
+```
+
+To completely remove all containers and volumes:
+```bash
+astro dev kill
+```
