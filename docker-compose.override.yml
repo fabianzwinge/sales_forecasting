@@ -109,6 +109,31 @@ services:
     networks:
       - airflow
       - default
+
+  streamlit:
+    image: python:3.11-slim
+    container_name: streamlit
+    working_dir: /app
+    command: >
+      bash -c "
+      apt-get update && apt-get install -y libgomp1 build-essential cmake &&
+      pip install --no-cache-dir -r requirements.txt &&
+      streamlit run inference_app.py --server.port=8501 --server.address=0.0.0.0
+      "
+    ports:
+      - '8501:8501'
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+      - AWS_ACCESS_KEY_ID=minio
+      - AWS_SECRET_ACCESS_KEY=minio123
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./ui:/app
+      - ./include:/usr/local/airflow/include:ro
+    depends_on:
+      - mlflow
+      - minio
       
 volumes:
   pgdata:
