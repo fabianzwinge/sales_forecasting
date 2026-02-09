@@ -107,7 +107,7 @@ if st.session_state.models_loaded:
                 st.dataframe(input_data.head())
                 
             # Basic validation
-            required_cols = ['date', total_revenue]
+            required_cols = ['date', 'total_revenue']
             missing_cols = [col for col in required_cols if col not in input_data.columns]
             if missing_cols:
                 st.error(f"Missing required columns: {missing_cols}")
@@ -141,7 +141,7 @@ if st.session_state.models_loaded:
                 manual_data.append({
                     'date': date,
                     'store_id': store_id,
-                    total_revenue: sales
+                    'total_revenue': sales
                 })
         
         if st.button("Use Manual Data", key="manual_btn"):
@@ -174,7 +174,7 @@ if st.session_state.models_loaded:
             input_data = pd.DataFrame({
                 'date': dates,
                 'store_id': 'store_001',
-                total_revenue: sales
+                'total_revenue': sales
             })
             
             st.success("✅ Sample data generated")
@@ -183,7 +183,7 @@ if st.session_state.models_loaded:
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 x=input_data['date'],
-                y=input_data[total_revenue],
+                y=input_data['total_revenue'],
                 mode='lines',
                 name='Sample Sales Data'
             ))
@@ -250,7 +250,7 @@ if st.session_state.models_loaded:
                         # Historical data
                         fig.add_trace(go.Scatter(
                             x=predictions_df[historical_mask]['date'],
-                            y=input_data[total_revenue],
+                            y=input_data['total_revenue'],
                             mode='lines',
                             name='Historical',
                             line=dict(color='blue', width=2)
@@ -345,8 +345,8 @@ else:
         
         ### Quick Check
         
-        - **MLflow UI**: [http://localhost:5001](http://localhost:5001) - Check if models exist
+        - **MLflow UI**: [http://localhost:5000](http://localhost:5000) - Check if models exist
         - **MinIO UI**: [http://localhost:9001](http://localhost:9001) - Check artifact storage
-          - Username: `minioadmin`
-          - Password: `minioadmin`
+          - Username: `minio`
+          - Password: `minio123`
         """)

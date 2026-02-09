@@ -109,33 +109,33 @@ class SimplePredictor:
             future_df = self.prepare_features(future_df)
             
             # Use last known values for lag features
-            if len(historical_df) > 0 and total_revenue in historical_df.columns:
+            if len(historical_df) > 0 and 'total_revenue' in historical_df.columns:
                 # Get recent sales values for lag features
-                recent_sales = historical_df[total_revenue].tail(30).values
-                sales_mean = historical_df[total_revenue].mean()
+                recent_sales = historical_df['total_revenue'].tail(30).values
+                sales_mean = historical_df['total_revenue'].mean()
                 
                 # Set lag features based on historical data
                 for lag in [1, 2, 3, 7, 14, 21, 30]:
                     if len(recent_sales) >= lag:
-                        future_df[ftotal_revenue_lag_{lag}'] = recent_sales[-lag]
+                        future_df[f'total_revenue_lag_{lag}'] = recent_sales[-lag]
                     else:
-                        future_df[ftotal_revenue_lag_{lag}'] = sales_mean
+                        future_df[f'total_revenue_lag_{lag}'] = sales_mean
                 
                 # Set rolling statistics based on historical data
                 for window in [3, 7, 14, 21, 30]:
                     if len(recent_sales) >= window:
                         window_data = recent_sales[-window:]
-                        future_df[ftotal_revenue_rolling_{window}_mean'] = np.mean(window_data)
-                        future_df[ftotal_revenue_rolling_{window}_std'] = np.std(window_data)
-                        future_df[ftotal_revenue_rolling_{window}_min'] = np.min(window_data)
-                        future_df[ftotal_revenue_rolling_{window}_max'] = np.max(window_data)
-                        future_df[ftotal_revenue_rolling_{window}_median'] = np.median(window_data)
+                        future_df[f'total_revenue_rolling_{window}_mean'] = np.mean(window_data)
+                        future_df[f'total_revenue_rolling_{window}_std'] = np.std(window_data)
+                        future_df[f'total_revenue_rolling_{window}_min'] = np.min(window_data)
+                        future_df[f'total_revenue_rolling_{window}_max'] = np.max(window_data)
+                        future_df[f'total_revenue_rolling_{window}_median'] = np.median(window_data)
                     else:
-                        future_df[ftotal_revenue_rolling_{window}_mean'] = sales_mean
-                        future_df[ftotal_revenue_rolling_{window}_std'] = 0
-                        future_df[ftotal_revenue_rolling_{window}_min'] = sales_mean
-                        future_df[ftotal_revenue_rolling_{window}_max'] = sales_mean
-                        future_df[ftotal_revenue_rolling_{window}_median'] = sales_mean
+                        future_df[f'total_revenue_rolling_{window}_mean'] = sales_mean
+                        future_df[f'total_revenue_rolling_{window}_std'] = 0
+                        future_df[f'total_revenue_rolling_{window}_min'] = sales_mean
+                        future_df[f'total_revenue_rolling_{window}_max'] = sales_mean
+                        future_df[f'total_revenue_rolling_{window}_median'] = sales_mean
             
             # Handle categorical features (store_id)
             if 'store_id' in future_df.columns and future_df['store_id'].dtype == 'object':
@@ -181,8 +181,8 @@ class SimplePredictor:
             else:
                 # Fallback to basic features (exclude string columns)
                 feature_cols = ['year', 'month', 'day', 'dayofweek', 'quarter', 
-                               'is_weekend', total_revenue_lag_1', total_revenue_lag_7',
-                               total_revenue_rolling_mean_7', total_revenue_rolling_std_7']
+                               'is_weekend', 'total_revenue_lag_1', 'total_revenue_lag_7',
+                               'total_revenue_rolling_7_mean', 'total_revenue_rolling_7_std']
                 # Add any store_id encoded columns
                 store_cols = [col for col in future_df.columns if col.startswith('store_id_') and col != 'store_id']
                 feature_cols.extend(store_cols)
