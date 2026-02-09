@@ -265,9 +265,9 @@ def sales_forecast():
         mlflow_manager = MLflowManager()
         model_versions = {}
         for model_name in ["xgboost", "lightgbm"]:
-            model_version = mlflow_manager.register_model(run_id, model_name, model_name)
-            model_versions[model_name] = model_version
-            print(f"Registered {model_name} as version {model_version.version} in MLflow Model Registry")
+            version = mlflow_manager.register_model(run_id, model_name, model_name)
+            model_versions[model_name] = version
+            print(f"Registered {model_name} as version {version} in MLflow Model Registry")
         
         return model_versions
 
@@ -277,9 +277,9 @@ def sales_forecast():
         from utils.mlflow_utils import MLflowManager
         
         mlflow_manager = MLflowManager()
-        for model_name, model_version in model_versions.items():
-           mlflow_manager.transition_model_version_stage(model_name, model_version.version, stage="Production")
-           print(f"Deployed {model_name} version {model_version.version} to Production stage")
+        for model_name, version in model_versions.items():
+           mlflow_manager.transition_model_stage(model_name, version, stage="Production")
+           print(f"Deployed {model_name} version {version} to Production stage")
 
         return "Models deployed to Production stage in MLflow Model Registry"
 
