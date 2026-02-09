@@ -36,7 +36,7 @@ def sales_forecast():
     def extract_data():
         data_output_dir = "/tmp/sales_data" #stored in docker container (airflow scheduler), not persisted
         generator = SalesDataGenerator(
-            start_date="2021-01-01", end_date="2021-12-31"
+            start_date="2021-06-01", end_date="2021-12-31"
         )
         print("Generating realistic sales data...")
         file_paths = generator.generate_sales_data(output_dir=data_output_dir)
@@ -120,7 +120,7 @@ def sales_forecast():
         sales_data = pd.concat(sales_dfs, ignore_index=True)
         daily_sales = (
             sales_data.groupby(['date', 'store_id', 'product_id', 'category'])
-            .agg({'quantity_sold': 'sum', 'revenue': 'sum', 'cost': 'sum', 'discount_percent': 'sum', 'profit': 'sum'})
+            .agg({'quantity_sold': 'sum', 'revenue': 'sum', 'cost': 'sum', 'discount_percent': 'sum', 'profit': 'sum', 'unit_price': 'mean'})
             .reset_index()
             .sort_values('date')
         )
@@ -170,7 +170,7 @@ def sales_forecast():
             # aggregate to store level for modeling
             store_daily_sales = (
                 daily_sales.groupby(['date', 'store_id'])
-                .agg({'has_discount': 'mean', 'total_revenue': 'sum', 'total_quantity': 'sum', 'customer_traffic': 'first', 'is_holiday': 'first'})
+                .agg({'has_discount': 'mean', 'total_revenue': 'sum', 'total_quantity': 'sum', 'total_profit': 'sum', 'customer_traffic': 'first', 'is_holiday': 'first'})
                 .reset_index()
             )
             
