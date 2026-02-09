@@ -75,9 +75,6 @@ The Streamlit UI provides an interactive interface for generating sales forecast
 ![Upload Data](res/ui_1.png)
 *Upload historical sales data (CSV)*
 
-![Forecast Results](res/ui_2.png)
-*Interactive visualization of predictions with confidence intervals*
-
 Access the UI at http://localhost:8501 after starting the pipeline.
 
 ## Configuration
