@@ -27,7 +27,7 @@ class MLflowS3Manager:
             config=Config(signature_version='s3v4'),
             region_name=os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
         )
-        self.bucket_name = 'mlflow-artifacts'
+        self.bucket_name = 'mlflow'
         
     def upload_artifact_to_s3(self, local_path: str, run_id: str, artifact_path: Optional[str] = None):
         """
