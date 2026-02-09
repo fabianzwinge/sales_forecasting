@@ -15,7 +15,8 @@ import xgboost as xgb
 import lightgbm as lgb
 import optuna
 import mlflow
-
+import tempfile
+from ml_models.model_visualization import ModelVisualizer
 from utils.mlflow_utils import MLflowManager
 from utils.mlflow_s3_utils import MLflowS3Manager
 from utils.s3_verification import verify_s3_artifacts, log_s3_verification_results
@@ -379,7 +380,7 @@ class ModelTrainer:
             try:
                 s3_manager = MLflowS3Manager()
                 s3_manager.sync_mlflow_artifacts_to_s3(current_run_id)
-                logger.info("✓ Successfully synced artifacts to S3")
+                logger.info("Successfully synced artifacts to S3")
                 
                 logger.info("Verifying S3 artifact storage...")
                 verification_results = verify_s3_artifacts(
@@ -411,9 +412,6 @@ class ModelTrainer:
                                        target_col: str = 'total_revenue') -> None:
         """Generate and log model comparison visualizations to MLflow"""
         try:
-            from ml_models.model_visualization import ModelVisualizer
-            import tempfile
-            import os
             
             logger.info("Starting visualization generation...")
             visualizer = ModelVisualizer()
@@ -483,52 +481,53 @@ class ModelTrainer:
     def _create_combined_html_report(self, saved_files: Dict[str, str], save_dir: str) -> None:
         """Create a combined HTML report with all visualizations"""
         
-        html_content = """
+        # Generate timestamp first to avoid .format() issues with CSS curly braces
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        html_content = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <title>Model Comparison Report</title>
             <style>
-                body {
+                body {{
                     font-family: Arial, sans-serif;
                     margin: 20px;
                     background-color: #f5f5f5;
-                }
-                h1, h2 {
+                }}
+                h1, h2 {{
                     color: #333;
-                }
-                .section {
+                }}
+                .section {{
                     background-color: white;
                     padding: 20px;
                     margin-bottom: 20px;
                     border-radius: 8px;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-                .timestamp {
+                }}
+                .timestamp {{
                     color: #666;
                     font-size: 14px;
-                }
-                iframe {
+                }}
+                iframe {{
                     width: 100%;
                     height: 800px;
                     border: 1px solid #ddd;
                     border-radius: 4px;
                     margin-top: 10px;
-                }
-                img {
+                }}
+                img {{
                     max-width: 100%;
                     height: auto;
                     border-radius: 4px;
                     margin-top: 10px;
-                }
+                }}
             </style>
         </head>
         <body>
             <h1>Sales Forecast Model Comparison Report</h1>
             <p class="timestamp">Generated on: {timestamp}</p>
         """
-        
-        html_content = html_content.format(timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         
         # Add each visualization section
         sections = [

@@ -40,14 +40,14 @@ class ModelVisualizer:
         models = list(metrics_dict.keys())
         
         # Create matplotlib figure
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        fig, axes = plt.subplots(1, 3, figsize=(14, 5))
         fig.suptitle('Model Performance Metrics Comparison', fontsize=16)
         
         # Define metrics to plot
         metrics_to_plot = [
-            ('rmse', 'RMSE', True, axes[0, 0]),
-            ('mae', 'MAE', True, axes[0, 1]),
-            ('r2', 'R² Score', False, axes[1, 1])  # Higher is better for R²
+            ('rmse', 'RMSE', True, axes[0]),
+            ('mae', 'MAE', True, axes[1]),
+            ('r2', 'R² Score', False, axes[2])  # Higher is better for R²
         ]
         
         for metric, title, lower_better, ax in metrics_to_plot:
@@ -89,7 +89,7 @@ class ModelVisualizer:
     def create_predictions_comparison_chart(self, predictions_dict: Dict[str, pd.DataFrame],
                                           actual_data: pd.DataFrame,
                                           date_col: str = 'date',
-                                          target_col: str = 'sales',
+                                          target_col: str = 'total_revenue',
                                           save_path: Optional[str] = None) -> plt.Figure:
         """Create time series comparison of model predictions"""
         
@@ -135,7 +135,7 @@ class ModelVisualizer:
     
     def create_residuals_analysis(self, predictions_dict: Dict[str, pd.DataFrame],
                                 actual_data: pd.DataFrame,
-                                target_col: str = 'sales',
+                                target_col: str = 'total_revenue',
                                 save_path: Optional[str] = None) -> plt.Figure:
         """Create residuals analysis plots"""
         
@@ -302,7 +302,7 @@ class ModelVisualizer:
     
     def create_error_distribution_chart(self, predictions_dict: Dict[str, pd.DataFrame],
                                       actual_data: pd.DataFrame,
-                                      target_col: str = 'sales',
+                                      target_col: str = 'total_revenue',
                                       save_path: Optional[str] = None) -> plt.Figure:
         """Create error distribution visualization"""
         
@@ -400,13 +400,13 @@ class ModelVisualizer:
                               save_dir: str) -> None:
         """Create a summary figure using matplotlib"""
         
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        fig, axes = plt.subplots(1, 3, figsize=(14, 5))
         fig.suptitle('Model Performance Summary', fontsize=16)
         
         models = list(metrics_dict.keys())
         metrics = ['rmse', 'mae', 'r2']
         
-        for idx, (ax, metric) in enumerate(zip(axes.flat, metrics)):
+        for idx, (ax, metric) in enumerate(zip(axes, metrics)):
             values = [metrics_dict[model].get(metric, 0) for model in models]
             colors = [self.colors.get(model.lower(), '#95A5A6') for model in models]
             
