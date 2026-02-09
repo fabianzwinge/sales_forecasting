@@ -123,12 +123,12 @@ def sales_forecast():
         sales_data = pd.concat(sales_dfs, ignore_index=True)
         daily_sales = (
             sales_data.groupby(['date', 'store_id', 'product_id', 'category'])
-            .agg({'quantity_sold': 'sum', 'revenue': 'sum', 'cost': 'sum', 'discount_percent': 'sum', 'profit': 'sum', 'unit_price': 'mean'})
+            .agg({'quantity_sold': 'sum', 'revenue': 'sum', 'cost': 'sum', 'discount_percent': 'mean', 'profit': 'sum', 'unit_price': 'mean'})
             .reset_index()
             .sort_values('date')
         )
 
-        daily_sales = daily_sales.rename(columns={'revenue': 'total_revenue', 'quantity_sold': 'total_quantity', 'cost': 'total_cost', 'discount_percent': 'total_discount_percent', 'profit': 'total_profit'})
+        daily_sales = daily_sales.rename(columns={'revenue': 'total_revenue', 'quantity_sold': 'total_quantity', 'cost': 'total_cost', 'profit': 'total_profit'})
         daily_sales['date'] = pd.to_datetime(daily_sales['date'])
 
         #clean promotions data and merge with sales
@@ -147,7 +147,7 @@ def sales_forecast():
                 on=['date', 'product_id'],
                 how='left'
             )
-            daily_sales['has_discount'] = daily_sales['has_discount'].fillna(0).astype(int)
+            daily_sales['has_discount'] = daily_sales['has_discount'].fillna(0)
         
         #clean customer traffic data and merge with sales
         if file_paths['customer_traffic']:
@@ -168,7 +168,7 @@ def sales_forecast():
                 on=['date', 'store_id'],
                 how='left'
             )
-            daily_sales['customer_traffic'] = daily_sales['customer_traffic'].fillna(daily_sales['customer_traffic'].median()).astype(int)
+            daily_sales['customer_traffic'] = daily_sales['customer_traffic'].fillna(daily_sales['customer_traffic'].median())
             
             # aggregate to store level for modeling
             store_daily_sales = (
