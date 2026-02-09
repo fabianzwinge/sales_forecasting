@@ -1,5 +1,6 @@
 from airflow.sdk import task, dag
 from datetime import datetime, timedelta
+from airflow.providers.standard.operators.bash import BashOperator
 
 import pandas as pd
 import os
@@ -35,7 +36,7 @@ def sales_forecast():
     def extract_data():
         data_output_dir = "/tmp/sales_data" #stored in docker container (airflow scheduler), not persisted
         generator = SalesDataGenerator(
-            start_date="2025-01-01", end_date="2026-01-01"
+            start_date="2021-01-01", end_date="2021-12-31"
         )
         print("Generating realistic sales data...")
         file_paths = generator.generate_sales_data(output_dir=data_output_dir)
@@ -266,6 +267,17 @@ def sales_forecast():
 
         return "Models deployed to Production stage in MLflow Model Registry"
 
+    @task()
+    def create_report(training_results, evaluation_results):
+        report = {
+            "training_results": training_results,
+            "evaluation_results": evaluation_results,
+        }
+        print("Final report:")
+        print(report)
+
+        return report
+
        
     extract_data_task = extract_data()
     validate_data_task = validate_data(extracted_data=extract_data_task)
@@ -274,6 +286,14 @@ def sales_forecast():
     evaluate_models_task = evaluate_models(training_results=train_models_task)
     register_best_model_task = register_best_model(evaluation_results=evaluate_models_task)
     deploy_model_task = deploy_model(model_versions=register_best_model_task)
+    create_report_task = create_report(training_results=train_models_task, evaluation_results=evaluate_models_task)
+
+    cleanup_task = BashOperator(
+        task_id="cleanup",
+        bash_command="rm -rf /tmp/sales_data || true",
+    )
+
+    create_report_task >> cleanup_task
 
 sales_forecast_dag = sales_forecast()
 
