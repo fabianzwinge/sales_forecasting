@@ -5,13 +5,13 @@ from airflow.providers.standard.operators.bash import BashOperator
 import pandas as pd
 import os
 import sys
-import mlflow
 
 sys.path.append("/usr/local/airflow/include")
 
-from utils.sales_data_generator import SalesDataGenerator
-from ml_models.train_models import ModelTrainer
-from utils.mlflow_utils import MLflowManager
+# Heavy imports moved inside task functions to avoid loading during DAG parsing
+# from utils.sales_data_generator import SalesDataGenerator
+# from ml_models.train_models import ModelTrainer
+# from utils.mlflow_utils import MLflowManager
 
 default_args = {
     "owner": "airflow",
@@ -34,6 +34,9 @@ default_args = {
 def sales_forecast():
     @task()
     def extract_data():
+        # Import here to avoid loading during DAG parsing
+        from utils.sales_data_generator import SalesDataGenerator
+        
         data_output_dir = "/tmp/sales_data" #stored in docker container (airflow scheduler), not persisted
         generator = SalesDataGenerator(
             start_date="2021-06-01", end_date="2021-12-31"
@@ -182,6 +185,10 @@ def sales_forecast():
 
     @task()
     def train_models(cleaned_data):
+        # Import here to avoid loading heavy ML libraries during DAG parsing
+        from ml_models.train_models import ModelTrainer
+        import mlflow
+        
         trainer = ModelTrainer()
         train_df, val_df, test_df = trainer.prepare_data(
             cleaned_data,
@@ -226,6 +233,9 @@ def sales_forecast():
     
     @task()
     def evaluate_models(training_results):
+        # Import here to avoid loading during DAG parsing
+        from utils.mlflow_utils import MLflowManager
+        
         results = training_results['training_results']
         mlflow_manager = MLflowManager()
         best_model = None
@@ -248,6 +258,9 @@ def sales_forecast():
 
     @task()
     def register_best_model(evaluation_results):
+        # Import here to avoid loading during DAG parsing
+        from utils.mlflow_utils import MLflowManager
+        
         run_id = evaluation_results['best_run']
         mlflow_manager = MLflowManager()
         model_versions = {}
@@ -260,6 +273,9 @@ def sales_forecast():
 
     @task()
     def deploy_model(model_versions):
+        # Import here to avoid loading during DAG parsing
+        from utils.mlflow_utils import MLflowManager
+        
         mlflow_manager = MLflowManager()
         for model_name, model_version in model_versions.items():
            mlflow_manager.transition_model_version_stage(model_name, model_version.version, stage="Production")

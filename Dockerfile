@@ -17,3 +17,7 @@ ENV MLFLOW_S3_ENDPOINT_URL=http://minio:9000
 ENV AWS_ACCESS_KEY_ID=minio
 ENV AWS_SECRET_ACCESS_KEY=minio123
 ENV AWS_DEFAULT_REGION=us-east-1
+
+# Python optimization: Don't write .pyc files and use hash-based .pyc invalidation
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
