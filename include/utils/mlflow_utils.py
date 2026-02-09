@@ -12,7 +12,6 @@ import numpy as np
 from datetime import datetime
 import logging
 import joblib
-from .service_discovery import get_mlflow_endpoint, get_minio_endpoint
 
 logger = logging.getLogger(__name__)
 
